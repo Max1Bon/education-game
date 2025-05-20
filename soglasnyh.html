@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>Проверь согласную в корне!</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    body { font-family: 'Segoe UI', Arial, sans-serif; background: #f6f3ee; color: #222; margin: 0; }
+    .container { max-width: 600px; margin: 40px auto; background: #fff; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); padding: 32px; }
+    h1 { text-align: center; color: #6c4f3d; }
+    .task { margin-bottom: 24px; font-size: 1.1em; }
+    .input-row { display: flex; align-items: center; margin-bottom: 12px; }
+    .input-row input[type="text"] { width: 35px; font-size: 1.1em; text-align: center; margin-right: 8px; border: 1px solid #bfa88c; border-radius: 4px; padding: 4px;}
+    .input-row span { min-width: 160px; }
+    .btn { background: #9d7e5c; color: #fff; border: none; border-radius: 6px; padding: 12px 28px; font-size: 1.1em; cursor: pointer; margin-top: 18px; transition: background 0.2s;}
+    .btn:hover { background: #6c4f3d; }
+    .result { margin: 20px 0; font-size: 1.2em; }
+    .correct { color: green; }
+    .wrong { color: red; }
+    @media (max-width: 700px) {
+      .container { padding: 12px; }
+      .input-row span { min-width: 90px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Проверь согласную в корне!</h1>
+    <div class="task">
+      Вставьте пропущенную согласную, используя проверочные однокоренные слова.
+    </div>
+    <form id="quiz-form" autocomplete="off"></form>
+    <button class="btn" id="check-btn">Проверить</button>
+    <div id="result" class="result"></div>
+    <button class="btn" id="restart-btn" style="display:none;">Начать сначала</button>
+  </div>
+  <script>
+    // Массив заданий: {word: "гну_ный", answer: "с", full: "гнусный", check: "гнус"}
+    const words = [
+      {word: "гну_ный", answer: "с", full: "гнусный", check: "гнус"},
+      {word: "гру_ный", answer: "с", full: "грустный", check: "грусть"},
+      {word: "ху_ший", answer: "д", full: "худший", check: "худой"},
+      {word: "лу_ший", answer: "ч", full: "лучший", check: "луч"},
+      {word: "у_кий", answer: "з", full: "узкий", check: "узко"},
+      {word: "громо_кий", answer: "з", full: "громозкий", check: "громоздить"},
+      {word: "зави_ливый", answer: "с", full: "зависливый", check: "зависть"},
+      {word: "тру_ливый", answer: "с", full: "трусливый", check: "трус"},
+      {word: "ко_ный (ум)", answer: "с", full: "косный", check: "косность"},
+      {word: "ко_ный (бульон)", answer: "с", full: "костный", check: "кость"},
+      {word: "чу_ствовать", answer: "в", full: "чувствовать", check: "чувство"},
+      {word: "уча_ствовать", answer: "с", full: "участвовать", check: "участие"},
+      {word: "че_ствовать", answer: "с", full: "чествовать", check: "честь"},
+      {word: "безмо_ствовать", answer: "л", full: "безмолвствовать", check: "молвить"},
+      {word: "хва_ливый", answer: "с", full: "хвастливый", check: "хвастать"},
+      {word: "выно_ливый", answer: "с", full: "выносливый", check: "выносить"},
+      // Дополнительные слова для расширения до 30
+      {word: "про_ка", answer: "б", full: "пробка", check: "пробка — пробочка"},
+      {word: "ры_ка", answer: "б", full: "рыбка", check: "рыба"},
+      {word: "тру_ка", answer: "б", full: "трубка", check: "труба"},
+      {word: "ру_ка", answer: "б", full: "рубка", check: "рубить"},
+      {word: "слег_ка", answer: "к", full: "слегка", check: "легкий"},
+      {word: "мя_кость", answer: "г", full: "мягкость", check: "мягкий"},
+      {word: "скла_ка", answer: "д", full: "складка", check: "склад"},
+      {word: "раскла_ка", answer: "д", full: "раскладка", check: "раскладывать"},
+      {word: "у_ка", answer: "ж", full: "уж", check: "ужи"},
+      {word: "ло_ка", answer: "ж", full: "ложка", check: "ложечка"},
+      {word: "морко_ка", answer: "в", full: "морковка", check: "морковь"},
+      {word: "кро_", answer: "в", full: "кров", check: "кровь"},
+      {word: "бу_ка", answer: "д", full: "будка", check: "будочка"},
+      {word: "пру_", answer: "д", full: "пруд", check: "пруды"}
+    ];
+
+    function renderQuiz() {
+      const form = document.getElementById('quiz-form');
+      form.innerHTML = '';
+      words.forEach((item, idx) => {
+        form.innerHTML += `
+          <div class="input-row">
+            <input type="text" maxlength="1" id="in${idx}" autocomplete="off">
+            <span>${item.word.replace('_', '___')}</span>
+            <span style="color:#888;font-size:0.95em;">(проверочное: ${item.check})</span>
+          </div>
+        `;
+      });
+      document.getElementById('result').innerHTML = '';
+      document.getElementById('restart-btn').style.display = 'none';
+    }
+
+    function checkAnswers(e) {
+      e.preventDefault && e.preventDefault();
+      let correct = 0;
+      let feedback = '';
+      words.forEach((item, idx) => {
+        const val = (document.getElementById('in'+idx).value || '').toLowerCase();
+        if (val === item.answer) {
+          correct++;
+          feedback += `<div class="correct">${item.full} — верно</div>`;
+        } else {
+          feedback += `<div class="wrong">${item.full} — ошибка (правильно: <b>${item.answer}</b>)</div>`;
+        }
+      });
+      document.getElementById('result').innerHTML = `
+        <div>Ваш результат: <b>${correct}</b> из ${words.length}</div>
+        <div style="margin-top:10px;">${feedback}</div>
+      `;
+      document.getElementById('restart-btn').style.display = 'inline-block';
+    }
+
+    document.getElementById('check-btn').onclick = checkAnswers;
+    document.getElementById('restart-btn').onclick = function() {
+      renderQuiz();
+    };
+
+    renderQuiz();
+  </script>
+</body>
+</html>

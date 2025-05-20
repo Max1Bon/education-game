@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>Литературные викторины</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    body { font-family: 'Segoe UI', Arial, sans-serif; background: #f5f5f5; color: #222; margin: 0; }
+    header { background: #6c4f3d; color: #fff; padding: 24px 0 16px 0; text-align: center; font-size: 2em; }
+    nav { display: flex; justify-content: center; gap: 16px; background: #e3dbd1; padding: 10px 0; flex-wrap: wrap;}
+    nav button { background: #fff; border: 1px solid #bfa88c; border-radius: 6px; padding: 10px 24px; font-size: 1em; cursor: pointer; transition: background 0.18s;}
+    nav button.active, nav button:hover { background: #d1c2ad; }
+    main { max-width: 700px; margin: 36px auto; background: #fff; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.07); padding: 32px 20px; min-height: 300px;}
+    .footer { text-align: center; color: #7a6c5a; padding: 24px 0 12px 0; font-size: 1em; background: #f0ede9; margin-top: 40px;}
+    #game-frame { width: 100%; min-height: 500px; border: none; border-radius: 8px; margin-top: 20px;}
+    @media (max-width: 700px) {
+      main { padding: 14px 4px; }
+      header { font-size: 1.2em; }
+      nav { flex-direction: column; gap: 8px; }
+    }
+  </style>
+</head>
+<body>
+  <header>Литературные викторины</header>
+  <nav id="quiz-nav"></nav>
+  <main id="main-content">
+    <h2>Добро пожаловать!</h2>
+    <p>Выберите викторину из меню выше.<br>Новые игры можно добавлять в виде отдельных HTML-файлов.</p>
+    <iframe id="game-frame" style="display:none;"></iframe>
+  </main>
+  <div class="footer">&copy; 2025 Литературные викторины | Для обучения</div>
+
+  <script>
+    // Список игр. Указывайте путь к HTML-файлу викторины
+    const quizzes = [
+      {
+        id: 'astafiev-photo',
+        title: '«Фотография, на которой меня нет»',
+        html: 'astafiev-quiz.html' // путь к вашей викторине
+      },
+      {
+        id: 'soglasnyh',
+        title: '«Вставь пропущенные согласные»',
+        html: 'soglasnyh.html' // путь к вашей викторине
+      }
+      // Можно добавить другие викторины по аналогии
+    ];
+
+    // Генерация кнопок навигации
+    const nav = document.getElementById('quiz-nav');
+    quizzes.forEach(q => {
+      const btn = document.createElement('button');
+      btn.textContent = q.title;
+      btn.onclick = () => showQuiz(q);
+      btn.id = 'btn-' + q.id;
+      nav.appendChild(btn);
+    });
+
+    function showQuiz(quiz) {
+      quizzes.forEach(q => {
+        document.getElementById('btn-' + q.id).classList.toggle('active', q.id === quiz.id);
+      });
+      document.getElementById('main-content').querySelector('h2').style.display = 'none';
+      document.getElementById('main-content').querySelector('p').style.display = 'none';
+      const frame = document.getElementById('game-frame');
+      frame.style.display = 'block';
+      frame.src = quiz.html;
+    }
+  </script>
+</body>
+</html>

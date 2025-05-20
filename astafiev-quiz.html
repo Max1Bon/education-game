@@ -1,0 +1,130 @@
+<h2>Викторина по рассказу<br>«Фотография, на которой меня нет»</h2>
+<div id="quiz"></div>
+<div id="score" class="score"></div>
+<div id="achievements" class="achievements" style="display:none;"></div>
+<button id="restartBtn" class="btn" style="display:none;">Пройти ещё раз</button>
+<style>
+  .question { margin-bottom: 24px; }
+  .answers label { display: block; margin-bottom: 10px; cursor: pointer; padding: 8px 12px; border-radius: 6px; transition: background 0.2s;}
+  .answers input[type="radio"] { margin-right: 8px; }
+  .answers label:hover { background: #f0eae2; }
+  .btn { display: inline-block; background: #9d7e5c; color: #fff; border: none; border-radius: 6px; padding: 12px 28px; font-size: 1.1em; cursor: pointer; margin-top: 18px; transition: background 0.2s;}
+  .btn:hover { background: #6c4f3d; }
+  .score { font-size: 1.2em; margin: 16px 0; text-align: center; }
+  .achievements { margin: 20px 0; padding: 16px; background: #f7f4e9; border-radius: 8px; border: 1px solid #e1d9c7; }
+  .achievement { margin-bottom: 8px; font-size: 1.05em; }
+</style>
+<script>
+  // Вопросы и ответы
+  const questions = [
+    {
+      text: "Кто приехал в деревню, вызвав важное событие в школе?",
+      answers: ["Учёный", "Фотограф", "Писатель", "Врач"],
+      correct: 1
+    },
+    {
+      text: "Почему главного героя не оказалось на фотографии?",
+      answers: ["Он опоздал", "Он поссорился с Санькой", "Он заболел и не смог прийти", "Он был наказан учителем"],
+      correct: 2
+    },
+    {
+      text: "Кто помогал лечить героя, когда у него заболели ноги?",
+      answers: ["Учитель", "Бабушка", "Дед", "Соседка Авдотья"],
+      correct: 1
+    },
+    {
+      text: "Как в деревне относились к учителю и учительнице?",
+      answers: ["С опаской", "С недоверием", "С уважением и заботой", "Безразлично"],
+      correct: 2
+    },
+    {
+      text: "Что делали ребята в ожидании фотографирования?",
+      answers: ["Готовили подарки", "Обсуждали, кто где сядет и во что оденется", "Готовили концерт", "Писали сочинения"],
+      correct: 1
+    }
+  ];
+  const achievementsList = [
+    { threshold: 1, text: "Начало пути: вы попробовали пройти тест!" },
+    { threshold: 3, text: "Внимательный читатель: вы хорошо помните сюжет!" },
+    { threshold: 5, text: "Знаток рассказа: вы ответили на все вопросы верно!" }
+  ];
+
+  let currentQuestion = 0;
+  let score = 0;
+  let userAnswers = [];
+
+  function showQuestion() {
+    const quizDiv = document.getElementById('quiz');
+    if (currentQuestion >= questions.length) {
+      showResults();
+      return;
+    }
+    const q = questions[currentQuestion];
+    let html = `<div class="question"><b>Вопрос ${currentQuestion+1}:</b><br>${q.text}</div><div class="answers">`;
+    q.answers.forEach((ans, idx) => {
+      html += `<label><input type="radio" name="answer" value="${idx}">${ans}</label>`;
+    });
+    html += `</div><button class="btn" onclick="submitAnswer()">Ответить</button>`;
+    quizDiv.innerHTML = html;
+    document.getElementById('score').innerHTML = `Баллы: ${score}`;
+    document.getElementById('achievements').style.display = 'none';
+    document.getElementById('restartBtn').style.display = 'none';
+  }
+
+  window.submitAnswer = function() {
+    const radios = document.getElementsByName('answer');
+    let selected = -1;
+    for (let i = 0; i < radios.length; i++) {
+      if (radios[i].checked) selected = parseInt(radios[i].value);
+    }
+    if (selected === -1) {
+      alert("Пожалуйста, выберите ответ.");
+      return;
+    }
+    userAnswers.push(selected);
+    if (selected === questions[currentQuestion].correct) score++;
+    currentQuestion++;
+    showQuestion();
+  };
+
+  function showResults() {
+    const quizDiv = document.getElementById('quiz');
+    quizDiv.innerHTML = `<h3>Результат</h3>
+      <div class="score">Вы набрали <b>${score}</b> из ${questions.length} баллов.</div>
+      <div>Ваши ответы:</div>
+      <ul>
+        ${questions.map((q, idx) => {
+          let isCorrect = userAnswers[idx] === q.correct;
+          return `<li>${q.text}<br>
+            <span style="color:${isCorrect ? 'green' : 'red'};">
+              ${q.answers[userAnswers[idx]] || "—"} ${isCorrect ? "✓" : "✗"}
+            </span>
+          </li>`;
+        }).join('')}
+      </ul>`;
+    showAchievements();
+    document.getElementById('restartBtn').style.display = 'inline-block';
+  }
+
+  function showAchievements() {
+    const achDiv = document.getElementById('achievements');
+    let unlocked = achievementsList.filter(a => score >= a.threshold);
+    if (unlocked.length > 0) {
+      achDiv.innerHTML = `<b>Достижения:</b><br>` +
+        unlocked.map(a => `<div class="achievement">🏆 ${a.text}</div>`).join('');
+      achDiv.style.display = 'block';
+    } else {
+      achDiv.style.display = 'none';
+    }
+  }
+
+  document.getElementById('restartBtn').onclick = function() {
+    currentQuestion = 0;
+    score = 0;
+    userAnswers = [];
+    showQuestion();
+  };
+
+  // Запуск теста
+  showQuestion();
+</script>
