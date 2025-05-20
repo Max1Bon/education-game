@@ -21,13 +21,14 @@
   </style>
 </head>
 <body>
-  <header>Литературные викторины</header>
+    <header>Литературные викторины</header>
   <nav id="quiz-nav"></nav>
   <main id="main-content">
     <h2>Добро пожаловать!</h2>
     <p>Выберите викторину из меню выше.<br>Новые игры можно добавлять в виде отдельных HTML-файлов.</p>
     <iframe id="game-frame" style="display:none;"></iframe>
   </main>
+
   <div class="footer">&copy; 2025 Литературные викторины | Для обучения</div>
 
   <script>
@@ -44,9 +45,19 @@
         html: 'soglasnyh.html' // путь к вашей викторине
       },
       {
-        id: 'soglasnyh',
+        id: 'money_zakon',
         title: '«25 законов денег от Альберта Сафина»',
         html: 'safin1_game.html' // путь к вашей викторине
+      },
+      {
+        id: 'manipulations',
+        title: '«100 манипуляций для тренировки»',
+        html: 'manipulations.html' // путь к вашей викторине
+      },
+      {
+        id: 'kod_zhizni',
+        title: '«Код Жизни: Альберт Сафин. Упражнения»',
+        html: 'safin_game2.html' // путь к вашей викторине
       }
       // Можно добавить другие викторины по аналогии
     ];
@@ -72,5 +83,15 @@
       frame.src = quiz.html;
     }
   </script>
+  <div style="background:#e3f2fd; border-radius:8px; padding:12px 18px; margin:32px 0 0 0; text-align:center; font-size:1em;">
+  <b>📚 Полезные Telegram-каналы:</b>
+  <br>
+  <a href="https://t.me/itmaxru" target="_blank" style="color:#1976d2;">ITmax: Информатика и робототехника</a> | 
+  <a href="https://t.me/promtov_100" target="_blank" style="color:#1976d2;">Творчество нейросетей</a>
+  <br>
+  <span style="font-size:0.95em;">
+    Вопросы и сотрудничество: <a href="https://t.me/maxmih1" target="_blank" style="color:#1976d2;">@maxmih1</a>
+  </span>
+</div>
 </body>
 </html>
