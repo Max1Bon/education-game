@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>Игра: Прими важное решение</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    body { font-family: 'Segoe UI', Arial, sans-serif; background: #f6f3ee; color: #222; margin: 0; }
+    .container { max-width: 700px; margin: 36px auto; background: #fff; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); padding: 32px; }
+    h1 { text-align: center; color: #6c4f3d; }
+    .step { margin-bottom: 24px; }
+    textarea, input[type="text"] { width: 100%; font-size: 1em; padding: 8px; margin-top: 6px; border: 1px solid #bfa88c; border-radius: 5px;}
+    .btn { background: #9d7e5c; color: #fff; border: none; border-radius: 6px; padding: 12px 28px; font-size: 1.1em; cursor: pointer; margin-top: 18px; transition: background 0.2s;}
+    .btn:hover { background: #6c4f3d; }
+    .btn-secondary { background: #e3dbd1; color: #6c4f3d; margin-left: 12px;}
+    .btn-secondary:hover { background: #d1c2ad; }
+    .result { margin: 24px 0; font-size: 1.15em; padding: 18px; background: #e3f2fd; border-radius: 8px;}
+    .q { margin: 12px 0 4px 0; font-weight: bold; color: #6c4f3d;}
+    .mini { font-size: 0.95em; color: #888;}
+    @media (max-width: 700px) {
+      .container { padding: 10px; }
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+  <h1>Игра: Прими важное решение</h1>
+  <div id="game"></div>
+</div>
+<script>
+const steps = [
+  {
+    title: "1. Сформулируйте свой вопрос/проблему",
+    questions: [
+      {q: "Опишите ситуацию или решение, которое вы хотите принять.", type: "textarea", key: "problem"}
+    ]
+  },
+  {
+    title: "2. Квадрат Декарта (4 вопроса)",
+    questions: [
+      {q: "Что вы получите, если СДЕЛАЕТЕ это?", type: "textarea", key: "descart_yes"},
+      {q: "Что вы потеряете, если СДЕЛАЕТЕ это?", type: "textarea", key: "descart_yes_lose"},
+      {q: "Что вы получите, если НЕ сделаете это?", type: "textarea", key: "descart_no"},
+      {q: "Что вы потеряете, если НЕ сделаете это?", type: "textarea", key: "descart_no_lose"}
+    ]
+  },
+  {
+    title: "3. Плюсы и минусы",
+    questions: [
+      {q: "Плюсы, если сделать:", type: "textarea", key: "plus"},
+      {q: "Минусы, если сделать:", type: "textarea", key: "minus"}
+    ]
+  },
+  {
+    title: "4. Советы близких",
+    questions: [
+      {q: "Что бы посоветовали вам ваши близкие или друзья?", type: "textarea", key: "advice"}
+    ]
+  },
+  {
+    title: "5. Расширение рамок",
+    questions: [
+      {q: "Какие есть альтернативные варианты, кроме 'да' и 'нет'?", type: "textarea", key: "alternatives"}
+    ]
+  },
+  {
+    title: "6. Нахождение альтернативы",
+    questions: [
+      {q: "Если бы этот вариант исчез, что бы вы делали?", type: "textarea", key: "no_option"}
+    ]
+  },
+  {
+    title: "7. Метод стакана воды (Сильва)",
+    questions: [
+      {q: "Попробуйте перед сном подумать о проблеме и утром запишите любые пришедшие идеи.", type: "textarea", key: "silva"}
+    ]
+  },
+  {
+    title: "8. Вовремя остановиться",
+    questions: [
+      {q: "Не спешите! Как изменится ваше отношение к решению, если вы дадите себе паузу?", type: "textarea", key: "pause"}
+    ]
+  },
+  {
+    title: "9. Получение полной информации",
+    questions: [
+      {q: "Какую информацию стоит ещё собрать перед принятием решения?", type: "textarea", key: "info"}
+    ]
+  },
+  {
+    title: "10. Спокойствие, только спокойствие!",
+    questions: [
+      {q: "Опишите ваши эмоции сейчас. Как вы можете прийти в равновесие?", type: "textarea", key: "calm"}
+    ]
+  },
+  {
+    title: "11. Монетка и интуиция",
+    questions: [
+      {q: "Если бы вы подбросили монетку, какой результат вы бы хотели? Что подсказывает интуиция?", type: "textarea", key: "intuition"}
+    ]
+  },
+  {
+    title: "12. Актив или пассив?",
+    questions: [
+      {q: "Это решение принесёт больше активов или пассивов в вашу жизнь?", type: "textarea", key: "activepassive"}
+    ]
+  },
+  {
+    title: "13. Польза или вред?",
+    questions: [
+      {q: "От принятия этого решения будет больше пользы или вреда?", type: "textarea", key: "benefitharm"}
+    ]
+  },
+  {
+    title: "14. Нравственный рост?",
+    questions: [
+      {q: "Нравственно вы прокачаетесь или деградируете?", type: "textarea", key: "moral"}
+    ]
+  },
+  {
+    title: "15. Коуч-вопросы",
+    questions: [
+      {q: "Как это решение повлияет на вашу жизнь через 5 лет?", type: "textarea", key: "5years"},
+      {q: "А через месяц?", type: "textarea", key: "1month"}
+    ]
+  }
+];
+
+let state = {};
+let currentStep = 0;
+
+function renderStep() {
+  const step = steps[currentStep];
+  let html = `<div class="step"><h2>${step.title}</h2>`;
+  step.questions.forEach((q, i) => {
+    html += `<div class="q">${q.q}</div>`;
+    if(q.type === "textarea") {
+      html += `<textarea id="input${i}" rows="2">${state[q.key]||''}</textarea>`;
+    } else {
+      html += `<input type="text" id="input${i}" value="${state[q.key]||''}">`;
+    }
+  });
+  html += `<button class="btn" onclick="nextStep()">Далее</button>
+           <button class="btn btn-secondary" onclick="skipStep()">Пропустить</button></div>`;
+  document.getElementById('game').innerHTML = html;
+}
+
+function nextStep() {
+  steps[currentStep].questions.forEach((q, i) => {
+    state[q.key] = document.getElementById('input'+i).value;
+  });
+  currentStep++;
+  if(currentStep < steps.length) {
+    renderStep();
+  } else {
+    showResult();
+  }
+}
+
+function skipStep() {
+  steps[currentStep].questions.forEach((q, i) => {
+    if (typeof state[q.key] === 'undefined') state[q.key] = '';
+  });
+  currentStep++;
+  if(currentStep < steps.length) {
+    renderStep();
+  } else {
+    showResult();
+  }
+}
+
+function showResult() {
+  let score = 0;
+  let summary = [];
+  if ((state.plus||'').length > (state.minus||'').length) score++;
+  if ((state.descart_yes||'').length > (state.descart_no||'').length) score++;
+  if ((state.benefitharm||'').toLowerCase().includes('польз')) score++;
+  if ((state.activepassive||'').toLowerCase().includes('актив')) score++;
+  if ((state.moral||'').toLowerCase().includes('рост')) score++;
+  if ((state.intuition||'').toLowerCase().includes('да') || (state.intuition||'').toLowerCase().includes('сделать')) score++;
+  if ((state['5years']||'').toLowerCase().includes('лучше') || (state['5years']||'').toLowerCase().includes('положит')) score++;
+  if ((state['1month']||'').toLowerCase().includes('лучше') || (state['1month']||'').toLowerCase().includes('положит')) score++;
+
+  summary.push(`<b>Ваш вопрос:</b> ${state.problem||''}`);
+  summary.push(`<b>Главные плюсы:</b> ${state.plus||'-'}`);
+  summary.push(`<b>Главные минусы:</b> ${state.minus||'-'}`);
+  summary.push(`<b>Советы близких:</b> ${state.advice||'-'}`);
+  summary.push(`<b>Интуиция:</b> ${state.intuition||'-'}`);
+  summary.push(`<b>Польза/вред:</b> ${state.benefitharm||'-'}`);
+  summary.push(`<b>Актив/пассив:</b> ${state.activepassive||'-'}`);
+  summary.push(`<b>Моральный аспект:</b> ${state.moral||'-'}`);
+  summary.push(`<b>Через 5 лет:</b> ${state['5years']||'-'}`);
+  summary.push(`<b>Через месяц:</b> ${state['1month']||'-'}`);
+
+  let verdict = '';
+  if (score >= 6) {
+    verdict = "Анализ показывает: <b>Смело принимайте решение!</b> Большинство техник указывает на положительный исход.";
+  } else if (score >= 3) {
+    verdict = "Анализ показывает: <b>Взвесьте ещё раз!</b> Есть плюсы, но и сомнения. Возможно, стоит собрать больше информации или взять паузу.";
+  } else {
+    verdict = "Анализ показывает: <b>Пока не стоит принимать решение.</b> Много сомнений или минусов. Подумайте ещё!";
+  }
+
+  document.getElementById('game').innerHTML = `
+    <div class="result">
+      <h2>Ваш итоговый анализ</h2>
+      ${summary.join('<br>')}
+      <hr>
+      <b>${verdict}</b>
+      <br><br>
+      <button class="btn" onclick="restartGame()">Начать заново</button>
+    </div>
+  `;
+}
+
+function restartGame() {
+  state = {};
+  currentStep = 0;
+  renderStep();
+}
+
+renderStep();
+</script>
+</body>
+</html>

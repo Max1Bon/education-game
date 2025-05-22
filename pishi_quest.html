@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>Квест: Пиши, сокращай!</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    body { font-family: 'Segoe UI', Arial, sans-serif; background: #f5f5fa; color: #222; margin: 0; }
+    .container { max-width: 800px; margin: 24px auto; background: #fff; border-radius: 14px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); padding: 28px 18px; }
+    h1 { text-align: center; color: #6c4f3d; margin-bottom: 18px;}
+    .story { margin-bottom: 16px; font-size: 1.07em; line-height: 1.6;}
+    .choices { margin-bottom: 16px; }
+    .choices button { display: block; margin: 8px 0; background: #9d7e5c; color: #fff; border: none; border-radius: 6px; padding: 10px 16px; font-size: 1.03em; cursor: pointer; transition: background 0.2s;}
+    .choices button:hover { background: #6c4f3d; }
+    .score { margin: 12px 0; font-size: 1.04em; text-align: center;}
+    .hint { background: #f7f4e9; border-left: 4px solid #bfa88c; padding: 7px 12px; margin: 8px 0 0 0; border-radius: 6px; color: #5a4d3a; font-size: 0.98em;}
+    .enemy { background: #ffeaea; border-left: 4px solid #d44; padding: 7px 12px; margin: 8px 0 0 0; border-radius: 6px; color: #a22; font-size: 0.98em;}
+    .inv { background: #e3f2fd; border-left: 4px solid #1976d2; padding: 7px 12px; margin: 8px 0 0 0; border-radius: 6px; color: #1976d2; font-size: 0.98em;}
+    .report { background: #e8f5e9; border-left: 4px solid #6abf69; padding: 10px 15px; border-radius: 8px; margin-top: 18px;}
+    .input-row { text-align: center; margin-bottom: 16px;}
+    .input-row input { font-size: 1.07em; padding: 5px 10px; border-radius: 6px; border: 1px solid #bfa88c;}
+    .restart-btn { background: #bfa88c; color: #fff; border: none; border-radius: 6px; padding: 10px 18px; font-size: 1.03em; cursor: pointer; margin-top: 16px;}
+    .restart-btn:hover { background: #6c4f3d; }
+    .path { font-size:0.98em; color:#555; margin:12px 0 0 0; }
+    .inv-list { margin: 8px 0 0 0; }
+    .inv-btn { margin-left: 8px; background: #1976d2; color: #fff; border: none; border-radius: 4px; padding: 3px 8px; font-size: 0.98em; cursor: pointer;}
+    .inv-btn:hover { background: #125099; }
+    .task { margin-bottom: 16px; font-size: 1.07em; }
+    .result { margin: 10px 0; }
+    .correct { color: green; }
+    .wrong { color: red; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Квест: Пиши, сокращай!</h1>
+    <h4>Текстовый квест по книге «Пиши, сокращай» Ильяхова и Сарычевой. 
+      Квест содержит 10+ веток, задания на знание текста, внимательность и логику</h4>
+    <div id="game"></div>
+  </div>
+  <script>
+    // --- Тренажёрные задания ---
+    const tasks = [
+      {
+        title: "Убери лишнее слово (канцелярит):",
+        examples: [
+          { q: "В связи с тем, что проект завершён, мы уходим.", a: "В связи с тем, что" },
+          { q: "В целях экономии времени мы работаем быстрее.", a: "В целях" },
+          { q: "В настоящий момент мы заняты.", a: "В настоящий момент" },
+          { q: "Ввиду отсутствия данных решение не принято.", a: "Ввиду отсутствия" },
+          { q: "В течение недели мы подготовим отчёт.", a: "В течение" },
+          { q: "В рамках мероприятия прошла встреча.", a: "В рамках" },
+          { q: "В случае необходимости сообщите нам.", a: "В случае необходимости" },
+          { q: "На основании отчёта принято решение.", a: "На основании" },
+          { q: "С целью повышения эффективности внедряем CRM.", a: "С целью" },
+          { q: "В результате обсуждения найдено решение.", a: "В результате" }
+        ]
+      },
+      {
+        title: "Найди штамп (избыточное выражение):",
+        examples: [
+          { q: "Забота о клиентах — наш главный приоритет.", a: "главный приоритет" },
+          { q: "В ходе работы были выявлены ошибки.", a: "в ходе работы" },
+          { q: "В кратчайшие сроки мы решим проблему.", a: "в кратчайшие сроки" },
+          { q: "Оказать содействие в решении вопроса.", a: "оказать содействие" },
+          { q: "Принять меры по улучшению ситуации.", a: "принять меры" },
+          { q: "Оказать поддержку проекту.", a: "оказать поддержку" },
+          { q: "В полной мере реализовать потенциал.", a: "в полной мере" },
+          { q: "Оказать влияние на результат.", a: "оказать влияние" },
+          { q: "Вести активную деятельность.", a: "активную деятельность" },
+          { q: "Вести переговоры по вопросу.", a: "вести переговоры" }
+        ]
+      },
+      {
+        title: "Вставь подходящий союз (логика):",
+        examples: [
+          { q: "Я останусь дома, ___ идёт дождь.", a: "потому что" },
+          { q: "Он опоздал, ___ проспал.", a: "потому что" },
+          { q: "Пиши, ___ тебя читают.", a: "чтобы" },
+          { q: "Мы сделали всё, ___ могли.", a: "что" },
+          { q: "Я не пошёл гулять, ___ был занят.", a: "потому что" },
+          { q: "Она пришла, ___ позвали.", a: "потому что" },
+          { q: "Он сделал это, ___ хотел помочь.", a: "потому что" },
+          { q: "Я учусь, ___ стать лучше.", a: "чтобы" },
+          { q: "Он ушёл, ___ его вызвали.", a: "потому что" },
+          { q: "Я читаю, ___ узнавать новое.", a: "чтобы" }
+        ]
+      },
+      {
+        title: "Исправь ошибку в слове:",
+        examples: [
+          { q: "инжинер", a: "инженер" },
+          { q: "профессорра", a: "профессора" },
+          { q: "документция", a: "документация" },
+          { q: "привелегия", a: "привилегия" },
+          { q: "агенство", a: "агентство" },
+          { q: "колличество", a: "количество" },
+          { q: "абонемент", a: "абонемент" },
+          { q: "аппеляция", a: "апелляция" },
+          { q: "интерисный", a: "интересный" },
+          { q: "достопримечательность", a: "достопримечательность" }
+        ]
+      },
+      {
+        title: "Выбери правильный вариант (внимательность):",
+        examples: [
+          { q: "не_зависимо от результата", a: "независимо" },
+          { q: "по_тому что", a: "потому" },
+          { q: "в_течение недели", a: "в течение" },
+          { q: "по_этому поводу", a: "по этому" },
+          { q: "в_следствии дождя", a: "вследствие" },
+          { q: "на_счет денег", a: "насчет" },
+          { q: "за_тем, чтобы", a: "затем" },
+          { q: "в_следствии аварии", a: "вследствие" },
+          { q: "по_причине поломки", a: "по причине" },
+          { q: "на_пример", a: "например" }
+        ]
+      }
+    ];
+
+    // --- Квест ---
+    function rand(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+    function dice(n=6) { return 1+Math.floor(Math.random()*n); }
+
+    const enemies = [
+      {name: "Вода", text: "Вода размывает твой текст. -2 очка.", damage: 2},
+      {name: "Штампы", text: "Штампы делают текст скучным. -2 очка.", damage: 2},
+      {name: "Канцелярит", text: "Канцелярит атакует! -3 очка.", damage: 3},
+      {name: "Заумь", text: "Заумные слова путают читателя. -2 очка.", damage: 2},
+      {name: "Паразиты времени", text: "Паразиты времени крадут смысл. -1 очко.", damage: 1},
+      {name: "Оценки", text: "Субъективные оценки мешают убедить. -2 очка.", damage: 2},
+      {name: "Ложь", text: "Ложь разрушает доверие. -3 очка.", damage: 3}
+    ];
+    const items = [
+      {name: "Красная ручка", desc: "Позволяет вычёркивать мусор."},
+      {name: "Справочник Главреда", desc: "Подскажет, где стоп-слова."},
+      {name: "Кубик редактора", desc: "Позволяет бросить кубик и избежать врага."},
+      {name: "Лупа", desc: "Помогает увидеть заумь."},
+      {name: "Факты", desc: "Укрепляют текст против оценок."}
+    ];
+
+    // Индексы сцен, где будет автотренажёр (логические задания)
+    const logicScenes = {
+      3: 0,   // task 0
+      9: 1,   // task 1
+      17: 2,  // task 2
+      22: 3,  // task 3
+      42: 4   // task 4
+    };
+
+    const scenes = [
+      {id:'start', text:`Введите имя персонажа:`, input:true, next:1},
+      {id:'intro', text:s=>`Ты — начинающий редактор. Твоя цель — пройти путь сильного текста, победить врагов и собрать инструменты редактора.`, choices:[
+        {text:"Пойти на курс по редактуре", next:2, score:1, role:"Студент"},
+        {text:"Сразу взяться за текст", next:12, score:0, role:"Самоучка"}
+      ]},
+      // Курс по редактуре (2-11)
+      {id:2, text:"На курсе тебе выдают справочник Главреда.", item:1, choices:[
+        {text:"Двигаться дальше", next:3, score:0}
+      ]},
+      {id:3, text:"Первое задание: найди и убери лишнее слово.", logic:true, next:4},
+      {id:4, text:"Ты справляешься и получаешь красную ручку!", item:0, choices:[
+        {text:"Далее", next:5, score:0}
+      ]},
+      {id:5, text:"Внезапно появляется враг!", enemy:true, choices:[
+        {text:"Далее", next:6, score:0}
+      ]},
+      {id:6, text:"Как поступишь?", choices:[
+        {text:"Использовать справочник", next:7, score:1, useItem:1},
+        {text:"Бросить кубик", next:8, dice:true}
+      ]},
+      {id:7, text:"Справочник помог избежать врага.", choices:[
+        {text:"Далее", next:9, score:1}
+      ]},
+      {id:8, text:s=>`Ты бросаешь кубик... Выпало: ${s.lastDice}. Если больше 3 — избежал врага, иначе — потерял очки.`, choices:[
+        {text:"Далее", next:s=>s.lastDice>3?9:10, score:s=>s.lastDice>3?1:-2}
+      ]},
+      {id:9, text:"Следующее задание: найди штамп.", logic:true, next:11},
+      {id:10, text:"Враг настиг тебя! Ты теряешь очки.", choices:[
+        {text:"Далее", next:9, score:0}
+      ]},
+      {id:11, text:"Ты переходишь к следующему заданию: вставь союз.", logic:true, next:12},
+      {id:12, text:"Ты решаешь редактировать письмо.", logic:true, next:13},
+      {id:13, text:"В тексте много штампов. Как поступишь?", choices:[
+        {text:"Попробовать убрать штампы", next:14, score:1},
+        {text:"Оставить как есть", next:15, score:0}
+      ]},
+      {id:14, text:"Ты убрал штампы, но появляется враг!", enemy:true, choices:[
+        {text:"Далее", next:16, score:0}
+      ]},
+      {id:15, text:"Штампы остались, враг атакует!", enemy:true, choices:[
+        {text:"Далее", next:16, score:0}
+      ]},
+      {id:16, text:"Ты находишь кубик редактора.", item:2, choices:[
+        {text:"Далее", next:17, score:0}
+      ]},
+      {id:17, text:"Появляется задание: исправь ошибку.", logic:true, next:18},
+      {id:18, text:"Ты справился и получаешь факты.", item:4, choices:[
+        {text:"Далее", next:20, score:0}
+      ]},
+      // Центр — 10+ развилок (20+)
+      {id:20, text:"Перед тобой 4 двери: Вода, Штампы, Канцелярит, Заумь. Куда пойдёшь?", choices:[
+        {text:"Вода", next:21, score:0},
+        {text:"Штампы", next:31, score:0},
+        {text:"Канцелярит", next:41, score:0},
+        {text:"Заумь", next:51, score:0}
+      ]},
+      // Вода (21-30)
+      {id:21, text:"Вода пытается затопить твой текст!", enemy:true, choices:[
+        {text:"Далее", next:22, score:0}
+      ]},
+      {id:22, text:"Задание: выбери правильный вариант.", logic:true, next:23},
+      {id:23, text:"Ты спас текст от воды. Получаешь подсказку.", hint:true, choices:[
+        {text:"Далее", next:25, score:0}
+      ]},
+      {id:25, text:"Встречаешь персонажа — Опытный редактор.", choices:[
+        {text:"Попросить совет", next:26, score:1},
+        {text:"Сделать всё сам", next:27, score:0}
+      ]},
+      {id:26, text:"Редактор советует: «Читай вслух — найдёшь мусор».", hint:true, choices:[
+        {text:"Далее", next:28, score:0}
+      ]},
+      {id:27, text:"Ты идёшь дальше.", choices:[
+        {text:"Далее", next:28, score:0}
+      ]},
+      {id:28, text:"Появляется враг!", enemy:true, choices:[
+        {text:"Далее", next:29, score:0}
+      ]},
+      {id:29, text:"Ты находишь полезный пример.", item:4, choices:[
+        {text:"Далее", next:30, score:0}
+      ]},
+      {id:30, text:"Ты можешь выбрать новую дверь.", choices:[
+        {text:"Штампы", next:31, score:0},
+        {text:"Канцелярит", next:41, score:0},
+        {text:"Заумь", next:51, score:0},
+        {text:"Завершить путь", next:61, score:0}
+      ]},
+      // Штампы (31-40)
+      {id:31, text:"Штампы атакуют текст.", enemy:true, choices:[
+        {text:"Далее", next:32, score:0}
+      ]},
+      {id:32, text:"Как победить штампы?", choices:[
+        {text:"Заменить штампы на факты", next:33, score:1},
+        {text:"Оставить штампы", next:34, score:0}
+      ]},
+      {id:33, text:"Факты укрепляют твой текст.", choices:[
+        {text:"Далее", next:35, score:1}
+      ]},
+      {id:34, text:"Штампы мешают донести мысль.", enemy:true, choices:[
+        {text:"Далее", next:35, score:0}
+      ]},
+      {id:35, text:"Ты находишь красную ручку.", item:0, choices:[
+        {text:"Далее", next:36, score:0}
+      ]},
+      {id:36, text:"Появляется враг!", enemy:true, choices:[
+        {text:"Далее", next:37, score:0}
+      ]},
+      {id:37, text:"Ты встречаешь наставника.", choices:[
+        {text:"Взять подсказку", next:38, score:1},
+        {text:"Игнорировать", next:39, score:0}
+      ]},
+      {id:38, text:"Подсказка: «Примеры — лучше штампов».", hint:true, choices:[
+        {text:"Далее", next:40, score:0}
+      ]},
+      {id:39, text:"Ты идёшь дальше.", choices:[
+        {text:"Далее", next:40, score:0}
+      ]},
+      {id:40, text:"Выбери новую дверь.", choices:[
+        {text:"Вода", next:21, score:0},
+        {text:"Канцелярит", next:41, score:0},
+        {text:"Заумь", next:51, score:0},
+        {text:"Завершить путь", next:61, score:0}
+      ]},
+      // Канцелярит (41-50)
+      {id:41, text:"Канцелярит окутывает твой текст.", enemy:true, choices:[
+        {text:"Далее", next:42, score:0}
+      ]},
+      {id:42, text:"Задание: выбери правильный вариант.", logic:true, next:43},
+      {id:43, text:"Простота побеждает канцелярит.", choices:[
+        {text:"Далее", next:45, score:1}
+      ]},
+      {id:45, text:"Ты находишь лупу.", item:3, choices:[
+        {text:"Далее", next:46, score:0}
+      ]},
+      {id:46, text:"Появляется враг!", enemy:true, choices:[
+        {text:"Далее", next:47, score:0}
+      ]},
+      {id:47, text:"Ты встречаешь наставника.", choices:[
+        {text:"Взять подсказку", next:48, score:1},
+        {text:"Игнорировать", next:49, score:0}
+      ]},
+      {id:48, text:"Подсказка: «Пиши, как говоришь».", hint:true, choices:[
+        {text:"Далее", next:50, score:0}
+      ]},
+      {id:49, text:"Ты идёшь дальше.", choices:[
+        {text:"Далее", next:50, score:0}
+      ]},
+      {id:50, text:"Выбери новую дверь.", choices:[
+        {text:"Вода", next:21, score:0},
+        {text:"Штампы", next:31, score:0},
+        {text:"Заумь", next:51, score:0},
+        {text:"Завершить путь", next:61, score:0}
+      ]},
+      // Заумь (51-60)
+      {id:51, text:"Заумные слова путают читателя.", enemy:true, choices:[
+        {text:"Далее", next:52, score:0}
+      ]},
+      {id:52, text:"Как победить заумь?", choices:[
+        {text:"Заменить на простые", next:53, score:1},
+        {text:"Оставить как есть", next:54, score:0}
+      ]},
+      {id:53, text:"Ты делаешь текст понятнее.", choices:[
+        {text:"Далее", next:55, score:1}
+      ]},
+      {id:54, text:"Заумь мешает донести мысль.", enemy:true, choices:[
+        {text:"Далее", next:55, score:0}
+      ]},
+      {id:55, text:"Ты находишь справочник.", item:1, choices:[
+        {text:"Далее", next:56, score:0}
+      ]},
+      {id:56, text:"Появляется враг!", enemy:true, choices:[
+        {text:"Далее", next:57, score:0}
+      ]},
+      {id:57, text:"Ты встречаешь наставника.", choices:[
+        {text:"Взять подсказку", next:58, score:1},
+        {text:"Игнорировать", next:59, score:0}
+      ]},
+      {id:58, text:"Подсказка: «Пиши проще — тебя поймут».", hint:true, choices:[
+        {text:"Далее", next:60, score:0}
+      ]},
+      {id:59, text:"Ты идёшь дальше.", choices:[
+        {text:"Далее", next:60, score:0}
+      ]},
+      {id:60, text:"Выбери новую дверь.", choices:[
+        {text:"Вода", next:21, score:0},
+        {text:"Штампы", next:31, score:0},
+        {text:"Канцелярит", next:41, score:0},
+        {text:"Завершить путь", next:61, score:0}
+      ]},
+      // Финал
+      {id:61, text:s=>`Поздравляем, ${s.name}! Ты прошёл(ла) путь сильного текста.<br>
+        <div class="report">
+          <b>Итог:</b><br>
+          — Ты научился(ась) убирать воду, штампы, канцелярит и заумь<br>
+          — Использовал(а) подсказки и инструменты редактора<br>
+          — Применял(а) факты, примеры, простые слова<br>
+          — Балансировал(а) честность, пользу и заботу<br>
+          <b>Очки:</b> <span style="color:green;font-weight:bold;">${s.score}</span><br>
+          <b>Роль:</b> ${s.role || 'Без роли'}<br>
+          <b>Инвентарь:</b> ${s.inv.length ? s.inv.map(i=>items[i].name).join(', ') : 'нет'}<br>
+          <b>Путь:</b> <span class="path">${s.path.join(' → ')}</span>
+        </div>
+        <br>Попробуй пройти квест другим путём!`, end:true},
+      {id:100, text:`<b>К сожалению, ты потерял(а) все очки и выгорел(а) как редактор.</b><br>
+        <span class="enemy">Совет: пользуйся подсказками и инструментами, не игнорируй врагов!</span>`, end:true}
+    ];
+
+    let state = { name: '', score: 10, inv: [], path: [], role: '', lastDice: 0, usedCube: false };
+    let current = 0;
+
+    // --- Тренажёр логика ---
+    let quizTask = null, quizOrder = [], quizExample = 0, quizScore = 0;
+    function shuffle(arr) { return arr.sort(() => Math.random() - 0.5); }
+    function startQuiz(taskIdx, nextScene) {
+      quizTask = tasks[taskIdx];
+      quizOrder = shuffle([...Array(quizTask.examples.length).keys()]).slice(0,10);
+      quizExample = 0;
+      quizScore = 0;
+      state.quizNext = nextScene;
+      showQuizExample();
+    }
+    function showQuizExample() {
+      const exIndex = quizOrder[quizExample];
+      const ex = quizTask.examples[exIndex];
+      document.getElementById('game').innerHTML = `
+        <div class="task"><b>${quizTask.title}</b></div>
+        <div class="input-row">${ex.q}</div>
+        <input type="text" id="answer" autocomplete="off">
+        <button class="btn" onclick="checkQuizAnswer()">Проверить</button>
+        <div class="score">Вопрос ${quizExample+1} из 10 | Баллы: ${quizScore}</div>
+        <div id="feedback" class="result"></div>
+      `;
+    }
+    function checkQuizAnswer() {
+      const exIndex = quizOrder[quizExample];
+      const ex = quizTask.examples[exIndex];
+      const user = (document.getElementById('answer').value || '').trim().toLowerCase();
+      const correct = ex.a.toLowerCase();
+      let feedback = '';
+      if (user === correct) {
+        quizScore++;
+        feedback = `<span class="correct">Верно!</span>`;
+      } else {
+        feedback = `<span class="wrong">Неверно. Правильно: <b>${ex.a}</b></span>`;
+      }
+      document.getElementById('feedback').innerHTML = feedback;
+      setTimeout(() => {
+        quizExample++;
+        if (quizExample < 10) {
+          showQuizExample();
+        } else {
+          state.score += quizScore;
+          current = state.quizNext;
+          render();
+        }
+      }, 1200);
+    }
+
+    function addItem(itemId) {
+      if (!state.inv.includes(itemId)) {
+        state.inv.push(itemId);
+        return true;
+      }
+      return false;
+    }
+
+    function render() {
+      const g = document.getElementById('game');
+      let scene = scenes[current];
+      g.innerHTML = '';
+
+      // Ввод имени
+      if (scene.input) {
+        g.innerHTML = `
+          <div class="input-row">
+            <input type="text" id="player-name" placeholder="Имя">
+            <button class="choices" onclick="startGame()">Начать</button>
+          </div>
+        `;
+        return;
+      }
+
+      // --- Логические автозадания ---
+      if (scene.logic) {
+        // Выбор задания по номеру сцены
+        let taskIdx = logicScenes[current];
+        if (taskIdx !== undefined) {
+          startQuiz(taskIdx, current+1);
+          return;
+        }
+      }
+
+      // Основной текст
+      let text = typeof scene.text === 'function' ? scene.text(state) : scene.text;
+      g.innerHTML += `<div class="story">${text}</div>`;
+
+      // Инвентарь
+      if (!scene.end) {
+        let invStr = state.inv.length
+          ? state.inv.map(i=>items[i].name + ` <button class="inv-btn" onclick="showItem(${i})" title="Описание">?</button>`).join(', ')
+          : 'Инвентарь пуст';
+        g.innerHTML += `<div class="inv inv-list"><b>Инвентарь:</b> ${invStr}</div>`;
+      }
+
+      // Очки
+      if (!scene.end)
+        g.innerHTML += `<div class="score">Очки: <b>${state.score}</b></div>`;
+
+      // Инструмент
+      if (typeof scene.item === 'number' && !state.inv.includes(scene.item)) {
+        addItem(scene.item);
+        g.innerHTML += `<div class="inv">Ты получил(а): <b>${items[scene.item].name}</b> — ${items[scene.item].desc}</div>`;
+      }
+
+      // Враг
+      if (scene.enemy) {
+        let enemy = rand(enemies);
+        if (state.inv.includes(2) && !state.usedCube) {
+          g.innerHTML += `<div class="enemy">${enemy.text}</div>
+          <button class="inv-btn" onclick="useCube(${enemy.damage})">Использовать кубик редактора</button>`;
+          state.enemyDamage = enemy.damage;
+          state.enemyShown = true;
+          return;
+        } else {
+          state.score -= enemy.damage;
+          g.innerHTML += `<div class="enemy">${enemy.text}</div>`;
+        }
+        if (state.score <= 0) {
+          current = scenes.findIndex(s=>s.id===100);
+          render();
+          return;
+        }
+      }
+
+      // Подсказка
+      if (scene.hint) {
+        g.innerHTML += `<div class="hint">Подсказка: внимательно читай, ищи примеры!</div>`;
+      }
+
+      // Кнопки выбора
+      if (scene.choices) {
+        let html = '<div class="choices">';
+        scene.choices.forEach((ch, idx) => {
+          if (ch.useItem !== undefined && !state.inv.includes(ch.useItem)) return;
+          html += `<button onclick="choose(${idx})">${ch.text}</button>`;
+        });
+        html += '</div>';
+        g.innerHTML += html;
+      }
+
+      if (scene.end) {
+        g.innerHTML += `<button class="restart-btn" onclick="restartGame()">Начать заново</button>`;
+      }
+    }
+
+    window.startGame = function() {
+      const name = document.getElementById('player-name').value.trim();
+      state.name = name ? name : 'Герой';
+      state.score = 10;
+      state.inv = [];
+      state.path = [];
+      state.role = '';
+      state.usedCube = false;
+      current = 1;
+      render();
+    };
+
+    window.choose = function(idx) {
+      const scene = scenes[current];
+      const choice = scene.choices[idx];
+      if (choice.role) state.role = choice.role;
+      if (typeof choice.score === 'function') state.score += choice.score(state);
+      else state.score += choice.score || 0;
+      if (choice.dice) {
+        state.lastDice = dice();
+      }
+      if (choice.useItem !== undefined) {
+        let i = state.inv.indexOf(choice.useItem);
+        if (i !== -1) state.inv.splice(i, 1);
+      }
+      state.path.push(scenes[current].id);
+      if (typeof choice.next === 'function') {
+        current = scenes.findIndex(s=>s.id===choice.next(state));
+      } else {
+        current = scenes.findIndex(s=>s.id===choice.next);
+      }
+      render();
+    };
+
+    window.showItem = function(idx) {
+      alert(items[idx].name + ": " + items[idx].desc);
+    };
+
+    window.useCube = function(damage) {
+      state.usedCube = true;
+      let roll = dice();
+      if (roll > 3) {
+        alert("Ты бросил(а) кубик: " + roll + ". Ты избежал(а) врага!");
+      } else {
+        alert("Ты бросил(а) кубик: " + roll + ". Не повезло, враг всё равно нанёс урон.");
+        state.score -= damage;
+        if (state.score <= 0) {
+          current = scenes.findIndex(s=>s.id===100);
+          render();
+          return;
+        }
+      }
+      state.inv = state.inv.filter(i => i !== 2); // Кубик исчезает после использования
+      state.enemyShown = false;
+      render();
+    };
+
+    window.restartGame = function() {
+      state = { name: '', score: 10, inv: [], path: [], role: '', lastDice: 0, usedCube: false };
+      current = 0;
+      render();
+    };
+
+    render();
+  </script>
+</body>
+</html>

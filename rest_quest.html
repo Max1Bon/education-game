@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>Квест: Искусство отдыха — Битва за гармонию</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    body { font-family: 'Segoe UI', Arial, sans-serif; background: #f5f5fa; color: #222; margin: 0; }
+    .container { max-width: 800px; margin: 24px auto; background: #fff; border-radius: 14px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); padding: 28px 18px; }
+    h1 { text-align: center; color: #6c4f3d; margin-bottom: 18px;}
+    .story { margin-bottom: 16px; font-size: 1.07em; line-height: 1.6;}
+    .choices { margin-bottom: 16px; }
+    .choices button { display: block; margin: 8px 0; background: #9d7e5c; color: #fff; border: none; border-radius: 6px; padding: 10px 16px; font-size: 1.03em; cursor: pointer; transition: background 0.2s;}
+    .choices button:hover { background: #6c4f3d; }
+    .score { margin: 12px 0; font-size: 1.04em; text-align: center;}
+    .hint { background: #f7f4e9; border-left: 4px solid #bfa88c; padding: 7px 12px; margin: 8px 0 0 0; border-radius: 6px; color: #5a4d3a; font-size: 0.98em;}
+    .enemy { background: #ffeaea; border-left: 4px solid #d44; padding: 7px 12px; margin: 8px 0 0 0; border-radius: 6px; color: #a22; font-size: 0.98em;}
+    .report { background: #e8f5e9; border-left: 4px solid #6abf69; padding: 10px 15px; border-radius: 8px; margin-top: 18px;}
+    .input-row { text-align: center; margin-bottom: 16px;}
+    .input-row input { font-size: 1.07em; padding: 5px 10px; border-radius: 6px; border: 1px solid #bfa88c;}
+    .restart-btn { background: #bfa88c; color: #fff; border: none; border-radius: 6px; padding: 10px 18px; font-size: 1.03em; cursor: pointer; margin-top: 16px;}
+    .restart-btn:hover { background: #6c4f3d; }
+    @media (max-width: 700px) { .container { padding: 8px; } }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Квест: Искусство отдыха — Битва за гармонию</h1>
+    <div id="game"></div>
+  </div>
+  <script>
+    function rand(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+    function randomEnemy() {
+      const enemies = [
+        {name: "Стресс", text: "Стресс атакует! Ты теряешь 2 очка отдыха.", damage: 2},
+        {name: "Внутренний критик", text: "Внутренний критик заставляет тебя работать без отдыха. -3 очка отдыха.", damage: 3},
+        {name: "Дедлайн", text: "Срочный дедлайн! -4 очка отдыха.", damage: 4},
+        {name: "Синдром отличника", text: "Ты не можешь позволить себе отдых. -2 очка отдыха.", damage: 2},
+        {name: "Прокрастинация", text: "Прокрастинация крадёт твой отдых. -1 очко отдыха.", damage: 1},
+        {name: "Тревога", text: "Тревога мешает расслабиться. -2 очка отдыха.", damage: 2},
+        {name: "Информационный шум", text: "Поток новостей не даёт отдохнуть. -2 очка отдыха.", damage: 2}
+      ];
+      return rand(enemies);
+    }
+
+    // Главный массив сцен
+    const scenes = [
+      {id: 'start', text: `Введите имя персонажа:`, input: true, next: 'hub'},
+      {id: 'hub', text: "Куда пойдёшь дальше?", choices: [
+        {text: "Пойти по тропе знаний", next: 'z1', score: 0},
+        {text: "Пойти по тропе природы", next: 'p1', score: 0},
+        {text: "Пойти по тропе творчества", next: 't1', score: 0},
+        {text: "Пойти по тропе общения", next: 'o1', score: 0}
+      ]},
+
+      // ЗНАНИЯ
+      {id:'z1', text:"Ты входишь в библиотеку. На пути появляется враг!", enemy:true, choices:[
+        {text:"Далее", next:'z2', score:0}
+      ]},
+      {id:'z2', text:"Ты берёшь книгу о медитации. Как поступишь?", choices:[
+        {text:"Почитать внимательно", next:'z3', score:2},
+        {text:"Пробежать глазами", next:'z4', score:0}
+      ]},
+      {id:'z3', text:"Ты осваиваешь дыхательные практики. Враг подкрался!", enemy:true, choices:[
+        {text:"Далее", next:'z5', score:0}
+      ]},
+      {id:'z4', text:"Ты мало что понял(а). Появился враг!", enemy:true, choices:[
+        {text:"Далее", next:'z5', score:0}
+      ]},
+      {id:'z5', text:"В библиотеке есть зал для лекций. Что выберешь?", choices:[
+        {text:"Посетить лекцию по отдыху", next:'z6', score:1},
+        {text:"Поиграть в настольную игру", next:'z7', score:1}
+      ]},
+      {id:'z6', text:"Лектор говорит: «Отдых — это не лень, а необходимость!»", hint:true, choices:[
+        {text:"Далее", next:'z8', score:0}
+      ]},
+      {id:'z7', text:"Игра с друзьями приносит радость и отдых.", choices:[
+        {text:"Далее", next:'z8', score:1}
+      ]},
+      {id:'z8', text:"Ты можешь выйти в парк или вернуться к развилке.", choices:[
+        {text:"Парк", next:'p1', score:1},
+        {text:"К выбору пути", next:'hub', score:0}
+      ]},
+
+      // ПРИРОДА
+      {id:'p1', text:"Ты входишь в парк. Враг преграждает путь!", enemy:true, choices:[
+        {text:"Далее", next:'p2', score:0}
+      ]},
+      {id:'p2', text:"Ты видишь скамейку, пруд и тропинку в лес. Куда пойдёшь?", choices:[
+        {text:"Сесть у воды", next:'p3', score:2},
+        {text:"Погулять по аллее", next:'p4', score:1},
+        {text:"Пойти в лес", next:'p5', score:1}
+      ]},
+      {id:'p3', text:"Ты отдыхаешь у воды. Вдруг появляется белка и просит угощение.", choices:[
+        {text:"Дать орешек", next:'p6', score:1},
+        {text:"Прогнать белку", next:'p7', score:-1}
+      ]},
+      {id:'p4', text:"На аллее ты встречаешь старого друга.", choices:[
+        {text:"Поговорить", next:'p8', score:1},
+        {text:"Пойти дальше", next:'p9', score:0}
+      ]},
+      {id:'p5', text:"В лесу свежо. Ты слышишь пение птиц.", choices:[
+        {text:"Остановиться и послушать", next:'p10', score:1},
+        {text:"Идти дальше", next:'p11', score:0}
+      ]},
+      {id:'p6', text:"Белка благодарит тебя! Ты чувствуешь радость.", choices:[
+        {text:"Далее", next:'p12', score:1}
+      ]},
+      {id:'p7', text:"Белка обижается. Ты чувствуешь лёгкую вину.", choices:[
+        {text:"Далее", next:'p12', score:0}
+      ]},
+      {id:'p8', text:"Разговор с другом поднимает настроение.", choices:[
+        {text:"Далее", next:'p12', score:1}
+      ]},
+      {id:'p9', text:"Ты идёшь дальше и встречаешь группу людей, играющих в бадминтон.", choices:[
+        {text:"Присоединиться к игре", next:'p13', score:1},
+        {text:"Пойти на пикник", next:'p14', score:1}
+      ]},
+      {id:'p10', text:"Пение птиц умиротворяет тебя.", choices:[
+        {text:"Далее", next:'p12', score:1}
+      ]},
+      {id:'p11', text:"Ты случайно теряешь очко отдыха — споткнулся о корень.", enemy:true, choices:[
+        {text:"Далее", next:'p12', score:0}
+      ]},
+      {id:'p12', text:"Ты можешь вернуться к выбору пути или остаться в парке.", choices:[
+        {text:"Вернуться к выбору пути", next:'hub', score:0},
+        {text:"Остаться в парке", next:'p15', score:1}
+      ]},
+      {id:'p13', text:"Игра в бадминтон приносит радость и новые знакомства.", choices:[
+        {text:"Далее", next:'p12', score:1}
+      ]},
+      {id:'p14', text:"Пикник на траве — отличный способ восстановиться.", choices:[
+        {text:"Далее", next:'p12', score:1}
+      ]},
+      {id:'p15', text:"Ты отдыхаешь в парке. Почувствуй гармонию!", choices:[
+        {text:"Вернуться к выбору пути", next:'hub', score:0}
+      ]},
+
+      // ТВОРЧЕСТВО
+      {id:'t1', text:"Ты входишь в арт-студию. Враг встречает тебя!", enemy:true, choices:[
+        {text:"Далее", next:'t2', score:0}
+      ]},
+      {id:'t2', text:"Ты выбираешь занятие:", choices:[
+        {text:"Рисовать", next:'t3', score:1},
+        {text:"Играть на инструменте", next:'t4', score:1}
+      ]},
+      {id:'t3', text:"Рисование помогает расслабиться.", choices:[
+        {text:"Далее", next:'t5', score:1}
+      ]},
+      {id:'t4', text:"Музыка наполняет гармонией.", choices:[
+        {text:"Далее", next:'t5', score:1}
+      ]},
+      {id:'t5', text:"Враг подкрадывается!", enemy:true, choices:[
+        {text:"Далее", next:'t6', score:0}
+      ]},
+      {id:'t6', text:"Ты можешь создать поделку или написать стих.", choices:[
+        {text:"Поделка", next:'t7', score:1},
+        {text:"Стих", next:'t8', score:1}
+      ]},
+      {id:'t7', text:"Творчество приносит радость.", choices:[
+        {text:"Далее", next:'t9', score:1}
+      ]},
+      {id:'t8', text:"Стихотворение помогает выразить чувства.", choices:[
+        {text:"Далее", next:'t9', score:1}
+      ]},
+      {id:'t9', text:"Ты можешь вернуться к выбору пути или остаться в студии.", choices:[
+        {text:"Вернуться к выбору пути", next:'hub', score:0},
+        {text:"Остаться в студии", next:'t10', score:1}
+      ]},
+      {id:'t10', text:"Ты создаёшь новую работу и чувствуешь вдохновение.", choices:[
+        {text:"Вернуться к выбору пути", next:'hub', score:0}
+      ]},
+
+      // ОБЩЕНИЕ
+      {id:'o1', text:"Ты на площади. Враг встречает тебя!", enemy:true, choices:[
+        {text:"Далее", next:'o2', score:0}
+      ]},
+      {id:'o2', text:"Ты видишь группу людей. Что выберешь?", choices:[
+        {text:"Присоединиться к беседе", next:'o3', score:1},
+        {text:"Пойти на вечеринку", next:'o4', score:1}
+      ]},
+      {id:'o3', text:"Общение приносит радость.", choices:[
+        {text:"Далее", next:'o5', score:1}
+      ]},
+      {id:'o4', text:"Ты веселишься на вечеринке.", choices:[
+        {text:"Далее", next:'o5', score:1}
+      ]},
+      {id:'o5', text:"Враг атакует!", enemy:true, choices:[
+        {text:"Далее", next:'o6', score:0}
+      ]},
+      {id:'o6', text:"Тебе предлагают сыграть в командную игру.", choices:[
+        {text:"Согласиться", next:'o7', score:1},
+        {text:"Отказаться", next:'o8', score:0}
+      ]},
+      {id:'o7', text:"Командная игра поднимает настроение.", choices:[
+        {text:"Далее", next:'o9', score:1}
+      ]},
+      {id:'o8', text:"Ты чувствуешь себя в стороне. Враг подкрался!", enemy:true, choices:[
+        {text:"Далее", next:'o9', score:0}
+      ]},
+      {id:'o9', text:"Ты можешь вернуться к выбору пути или остаться с друзьями.", choices:[
+        {text:"Вернуться к выбору пути", next:'hub', score:0},
+        {text:"Остаться с друзьями", next:'o10', score:1}
+      ]},
+      {id:'o10', text:"Ты отдыхаешь в компании. Гармония достигнута!", choices:[
+        {text:"Вернуться к выбору пути", next:'hub', score:0}
+      ]},
+
+      // Финал
+      {id:99, text: s => `<b>Поздравляем, ${s.name}!</b> Ты прошёл(ла) путь гармонии.<br>
+        <div class="report">
+          <b>Итог:</b><br>
+          — Ты научился(ась) защищаться от врагов стресса<br>
+          — Использовал(а) разные способы отдыха<br>
+          — Балансировал(а) работу и восстановление<br>
+          <b>Очки отдыха:</b> <span style="color:green;font-weight:bold;">${s.score}</span>
+        </div>
+        <br>Попробуй пройти квест другим путём!`, end:true},
+      {id:100, text: `<b>К сожалению, ты потерял(а) все очки отдыха и выгорел(а).</b><br>
+        <span class="enemy">Совет: отдых — это не слабость, а твоя сила. Попробуй снова!</span>`, end:true}
+    ];
+
+    let state = { name: '', score: 10 };
+    let current = 0;
+
+    function render() {
+      const g = document.getElementById('game');
+      let scene = scenes[current];
+      g.innerHTML = '';
+
+      if (!scene) {
+        g.innerHTML = '<div class="story">Ошибка: сцена не найдена.</div>';
+        return;
+      }
+
+      // Ввод имени
+      if (scene.input) {
+        g.innerHTML = `
+          <div class="input-row">
+            <input type="text" id="player-name" placeholder="Имя">
+            <button class="choices" onclick="startGame()">Начать</button>
+          </div>
+        `;
+        return;
+      }
+
+      // Основной текст
+      let text = typeof scene.text === 'function' ? scene.text(state) : scene.text;
+      g.innerHTML += `<div class="story">${text}</div>`;
+
+      // Очки
+      if (!scene.end)
+        g.innerHTML += `<div class="score">Очки отдыха: <b>${state.score}</b></div>`;
+
+      // Враг
+      if (scene.enemy) {
+        const enemy = randomEnemy();
+        state.score -= enemy.damage;
+        g.innerHTML += `<div class="enemy">${enemy.text}</div>`;
+        if (state.score <= 0) {
+          current = scenes.findIndex(s=>s.id===100);
+          render();
+          return;
+        }
+      }
+
+      // Подсказка
+      if (scene.hint) {
+        g.innerHTML += `<div class="hint">Подсказка: отдых — это не роскошь, а необходимость!</div>`;
+      }
+
+      // Кнопки выбора
+      if (scene.choices) {
+        let html = '<div class="choices">';
+        scene.choices.forEach((ch, idx) => {
+          html += `<button onclick="choose(${idx})">${ch.text}</button>`;
+        });
+        html += '</div>';
+        g.innerHTML += html;
+      }
+
+      if (scene.end) {
+        g.innerHTML += `<button class="restart-btn" onclick="restartGame()">Начать заново</button>`;
+      }
+    }
+
+    window.startGame = function() {
+      const name = document.getElementById('player-name').value.trim();
+      state.name = name ? name : 'Герой';
+      state.score = 10;
+      current = scenes.findIndex(s=>s.id==='hub');
+      render();
+    };
+
+    window.choose = function(idx) {
+      const scene = scenes[current];
+      const choice = scene.choices[idx];
+      state.score += choice.score;
+      if (typeof choice.next === 'string') {
+        current = scenes.findIndex(s=>s.id===choice.next);
+      } else {
+        current = scenes.findIndex(s=>s.id===choice.next);
+      }
+      render();
+    };
+
+    window.restartGame = function() {
+      state = { name: '', score: 10 };
+      current = 0;
+      render();
+    };
+
+    render();
+  </script>
+</body>
+</html>

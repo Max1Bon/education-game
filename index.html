@@ -6,30 +6,109 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <style>
     body { font-family: 'Segoe UI', Arial, sans-serif; background: #f5f5f5; color: #222; margin: 0; }
-    header { background: #6c4f3d; color: #fff; padding: 24px 0 16px 0; text-align: center; font-size: 2em; }
-    nav { display: flex; justify-content: center; gap: 16px; background: #e3dbd1; padding: 10px 0; flex-wrap: wrap;}
+    header { background: #6c4f3d; color: #fff; padding: 24px 0 16px 0; text-align: center; font-size: 2em; position:relative;}
+    .donate-header-btn {
+      position: absolute; right:24px; top:22px;
+      background: linear-gradient(90deg,#1976d2 0%,#42a5f5 100%);
+      color:#fff; border:none; border-radius:7px; padding:7px 18px;
+      font-size:1em; font-weight:500; cursor:pointer; box-shadow:0 2px 8px rgba(25,118,210,0.08);
+      transition: background 0.2s;
+      display:inline-flex; align-items:center; gap:7px;
+      z-index:10;
+    }
+    .donate-header-btn:hover { background: linear-gradient(90deg,#1565c0 0%,#64b5f6 100%);}
+    .nav-wrapper { position: relative; }
+    #collapse-btn {
+      position: absolute;
+      left: 8px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 4px;
+      z-index: 2;
+      transition: background 0.2s;
+    }
+    #collapse-btn svg { width: 28px; height: 28px; fill: #156fff; }
+    #collapse-btn:hover { background: #5dc5ee; border-radius: 50%; }
+    nav {
+      display: flex;
+      justify-content: center;
+      gap: 16px;
+      background: #e3dbd1;
+      padding: 10px 0;
+      flex-wrap: wrap;
+      transition: max-height 0.4s cubic-bezier(0.4,0,0.2,1), opacity 0.3s;
+      max-height: 200px;
+      opacity: 1;
+      overflow: hidden;
+    }
+    nav.collapsed {
+      max-height: 0;
+      opacity: 0;
+      padding-top: 0;
+      padding-bottom: 0;
+      pointer-events: none;
+    }
     nav button { background: #fff; border: 1px solid #bfa88c; border-radius: 6px; padding: 10px 24px; font-size: 1em; cursor: pointer; transition: background 0.18s;}
     nav button.active, nav button:hover { background: #d1c2ad; }
     main { max-width: 700px; margin: 36px auto; background: #fff; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.07); padding: 32px 20px; min-height: 300px;}
     .footer { text-align: center; color: #7a6c5a; padding: 24px 0 12px 0; font-size: 1em; background: #f0ede9; margin-top: 40px;}
     #game-frame { width: 100%; min-height: 500px; border: none; border-radius: 8px; margin-top: 20px;}
+    /* Donate modal */
+    #donate-modal { display:none; position:fixed; z-index:1000; left:0;top:0;width:100vw;height:100vh; background:rgba(0,0,0,0.35);}
+    #donate-modal .modal-inner {
+      background:#fff; max-width:320px; margin:60px auto; border-radius:16px; box-shadow:0 8px 32px rgba(25,118,210,0.10);
+      padding:28px 16px 18px 16px; text-align:center; position:relative;
+    }
+    #donate-modal .close-btn {
+      position:absolute;top:7px;right:12px;background:none;border:none;font-size:1.4em;cursor:pointer;color:#888;
+    }
     @media (max-width: 700px) {
       main { padding: 14px 4px; }
       header { font-size: 1.2em; }
       nav { flex-direction: column; gap: 8px; }
+      #collapse-btn { left: 50%; top: 0; transform: translate(-50%,0); }
+      .donate-header-btn { right:10px; top:10px; padding:6px 13px; font-size:0.92em;}
+      #donate-modal .modal-inner { max-width:96vw; }
     }
   </style>
 </head>
 <body>
-    <header>Литературные викторины</header>
-  <nav id="quiz-nav"></nav>
+  <header>
+    Литературные викторины
+    <button id="donate-btn" class="donate-header-btn"><span style="font-size:1.1em;">💙</span> Поддержать</button>
+  </header>
+  <div class="nav-wrapper">
+    <button id="collapse-btn" title="Свернуть/развернуть панель">
+      <svg id="collapse-icon" viewBox="0 0 24 24">
+        <path d="M6 9l6 6 6-6"/>
+      </svg>
+    </button>
+    <nav id="quiz-nav"></nav>
+  </div>
   <main id="main-content">
     <h2>Добро пожаловать!</h2>
     <p>Выберите викторину из меню выше.<br>Новые игры можно добавлять в виде отдельных HTML-файлов.</p>
     <iframe id="game-frame" style="display:none;"></iframe>
   </main>
-
   <div class="footer">&copy; 2025 Литературные викторины | Для обучения</div>
+
+  <!-- Donate Modal -->
+  <div id="donate-modal">
+    <div class="modal-inner">
+      <button class="close-btn" onclick="closeDonate()">×</button>
+      <div style="font-size:1.1em; font-weight:500; margin-bottom:8px;">Понравились викторины?</div>
+      <div style="font-size:0.97em; margin-bottom:7px;">
+        Вы можете <a href="https://boosty.to/itmaxru/donate" target="_blank" style="color:#1976d2;font-weight:bold;">отблагодарить автора донатом</a>.<br>Спасибо за вашу поддержку!
+      </div>
+      <a href="https://boosty.to/itmaxru/donate"><img src="qr.jpg" alt="QR Boosty" width="90" height="90" style="margin:10px auto 12px;display:block;"></a>
+      <button onclick="showDonateThanks()" style="margin-top:7px;background:#1976d2;color:#fff;border:none;border-radius:6px;padding:7px 14px;cursor:pointer;font-size:0.98em;">Я поддержал(а)!</button>
+      <div id="donate-thanks" style="margin-top:12px;font-size:1.07em;color:#388e3c;"></div>
+      <div id="donate-cat" style="margin-top:10px;"></div>
+    </div>
+  </div>
 
   <script>
     // Список игр. Указывайте путь к HTML-файлу викторины
@@ -37,29 +116,33 @@
       {
         id: 'astafiev-photo',
         title: '«Фотография, на которой меня нет»',
-        html: 'astafiev-quiz.html' // путь к вашей викторине
+        html: 'astafiev-quiz.html'
+      },
+      {
+        id: 'quest-rest',
+        title: '«Квест битва - За гармонию!»',
+        html: 'rest_quest.html'
       },
       {
         id: 'soglasnyh',
         title: '«Вставь пропущенные согласные»',
-        html: 'soglasnyh.html' // путь к вашей викторине
+        html: 'soglasnyh.html'
       },
       {
         id: 'money_zakon',
         title: '«25 законов денег от Альберта Сафина»',
-        html: 'safin1_game.html' // путь к вашей викторине
+        html: 'safin1_game.html'
       },
       {
         id: 'manipulations',
         title: '«100 манипуляций для тренировки»',
-        html: 'manipulations.html' // путь к вашей викторине
+        html: 'manipulations.html'
       },
       {
         id: 'kod_zhizni',
         title: '«Код Жизни: Альберт Сафин. Упражнения»',
-        html: 'safin_game2.html' // путь к вашей викторине
+        html: 'safin_game2s.html'
       }
-      // Можно добавить другие викторины по аналогии
     ];
 
     // Генерация кнопок навигации
@@ -82,16 +165,63 @@
       frame.style.display = 'block';
       frame.src = quiz.html;
     }
+
+    // Сворачивание панели викторин
+    const collapseBtn = document.getElementById('collapse-btn');
+    const navPanel = document.getElementById('quiz-nav');
+    const collapseIcon = document.getElementById('collapse-icon');
+    let collapsed = false;
+    collapseBtn.onclick = function() {
+      collapsed = !collapsed;
+      navPanel.classList.toggle('collapsed', collapsed);
+      collapseIcon.innerHTML = collapsed
+        ? '<path d="M6 15l6-6 6 6"/>'
+        : '<path d="M6 9l6 6 6-6"/>';
+    };
+
+    // Donate modal logic
+    document.getElementById('donate-btn').onclick = function() {
+      document.getElementById('donate-modal').style.display = 'block';
+      document.getElementById('donate-thanks').innerHTML = '';
+      document.getElementById('donate-cat').innerHTML = '';
+    };
+    function closeDonate() {
+      document.getElementById('donate-modal').style.display = 'none';
+    }
+    function showDonateThanks() {
+      const phrases = [
+        "Спасибо за вашу доброту! 🐾",
+        "Ваша поддержка — лучшая награда! 😻",
+        "Благодарим за донат! Пусть удача всегда будет с вами! 🐈",
+        "Спасибо! Благодаря вам проект развивается! 💡",
+        "Вы — супер! Ваш вклад очень важен для нас! 😺",
+        "Спасибо за поддержку! Пусть у вас будет больше радостных дней! ☀️",
+        "От всей души благодарим за донат! 🐾",
+        "Спасибо! Ваше добро обязательно вернётся к вам! 🐱",
+        "Вы помогаете делать образование и игры лучше. Спасибо! 👏",
+        "Спасибо! Пусть отдых и вдохновение всегда будут с вами! 🧘"
+      ];
+      const cats = [
+        "https://i.imgur.com/iRDSPLF.jpeg",
+        "https://i.imgur.com/O2McEoH.jpeg",
+        "https://i.imgur.com/ZgvSR0g.jpeg",
+        "https://i.imgur.com/czQSwGE.jpeg",
+        "https://i.imgur.com/cRFjWnB.jpeg"
+      ];
+      document.getElementById('donate-thanks').innerText = phrases[Math.floor(Math.random()*phrases.length)];
+      document.getElementById('donate-cat').innerHTML = `<img src="${cats[Math.floor(Math.random()*cats.length)]}" alt="котик" style="max-width:80px;border-radius:10px;margin-top:8px;">`;
+    }
   </script>
+
   <div style="background:#e3f2fd; border-radius:8px; padding:12px 18px; margin:32px 0 0 0; text-align:center; font-size:1em;">
-  <b>📚 Полезные Telegram-каналы:</b>
-  <br>
-  <a href="https://t.me/itmaxru" target="_blank" style="color:#1976d2;">ITmax: Информатика и робототехника</a> | 
-  <a href="https://t.me/promtov_100" target="_blank" style="color:#1976d2;">Творчество нейросетей</a>
-  <br>
-  <span style="font-size:0.95em;">
-    Вопросы и сотрудничество: <a href="https://t.me/maxmih1" target="_blank" style="color:#1976d2;">@maxmih1</a>
-  </span>
-</div>
+    <b>📚 Полезные Telegram-каналы:</b>
+    <br>
+    <a href="https://t.me/itmaxru" target="_blank" style="color:#1976d2;">ITmax: Информатика и робототехника</a> | 
+    <a href="https://t.me/promtov_100" target="_blank" style="color:#1976d2;">Творчество нейросетей</a>
+    <br>
+    <span style="font-size:0.95em;">
+      Вопросы и сотрудничество: <a href="https://t.me/maxmih1" target="_blank" style="color:#1976d2;">@maxmih1</a>
+    </span>
+  </div>
 </body>
 </html>
